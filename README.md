@@ -1,2 +1,3 @@
-# homeassistant-config
-Snippets of Homeassistant configuration
+# Homeassistant Configuration Snippets
+
+- SYR SafeTech Connect: [syr-safetech-connect.yml](./syr-safetech-connect.yml)

@@ -1,0 +1,77 @@
+# Configuration of REST sensors for a SYR SafeTech Connect
+# https://www.syr.de/de/Produkte/CB9D9A72-BC51-40CE-840E-73401981A519/SafeTech-Connect
+# Partial API reference: https://github.com/ahornung/syr-safetech-connect-api
+#                        https://docplayer.org/228451961-Vorher-admin-rechte-setzen-set-adm-2-f-getestet-ok-ein-muss-zum-auslesen-ohne-kommt-nichts.html
+rest:
+  # Enable admin mode
+  - resource: "http://syr-safe-tech:5333/safe-tec/set/PRF/2"
+    scan_interval: 3600
+
+  # Update syr-safe-tech to your own device's name or IP address
+  - resource: "http://syr-safe-tech:5333/safe-tec/get/all"
+    scan_interval: 30
+
+    binary_sensor:
+      - name: "SYR Valve Opened Status"
+        unique_id: "syr_safetech_valve_opened"
+        value_template: "{{ value_json['getAB'] }}"
+        device_class: lock
+
+      - name: "SYR Micro leak detection"
+        unique_id: "syr_safetech_valve_microleak"
+        value_template: "{{ value_json['getPM1'] }}"
+        device_class: lock
+
+    sensor:
+      # Basics
+      - name: "SYR IP Address"
+        unique_id: "syr_safetech_ip"
+        value_template: "{{ value_json['getWIP'] }}"
+
+      - name: "SYR Battery voltage"
+        unique_id: "syr_safetech_batter"
+        value_template: "{{ value_json['getBAT'] | regex_replace(find=',', replace='.', ignorecase=True) }}"
+        unit_of_measurement: "V"
+        state_class: "measurement"
+
+      # Water consumption and pressure
+      - name: "SYR Total water consumption"
+        unique_id: "syr_safetech_water_total"
+        value_template: "{{ value_json['getVOL'] | regex_replace(find='Vol\\[L\\]', replace='', ignorecase=True) }}"
+        unit_of_measurement: "L"
+        device_class: water
+        state_class: "total_increasing"
+
+      - name: "SYR Current water consumption"
+        unique_id: "syr_safetech_water_current"
+        value_template: "{{ float(value_json['getAVO'] | regex_replace(find='mL', replace='', ignorecase=True)) / 1000.0 }}"
+        unit_of_measurement: "L"
+        device_class: "water"
+        state_class: "measurement"
+
+      - name: "SYR Last water consumption"
+        unique_id: "syr_safetech_water_last"
+        value_template: "{{ value_json['getLTV'] }}"
+        device_class: "water"
+        unit_of_measurement: "L"
+        state_class: "total"
+
+      - name: "SYR Water pressure"
+        unique_id: "syr_safetech_water_pressure"
+        value_template: "{{ float(value_json['getBAR'] | regex_replace(find=' mbar', replace='', ignorecase=True)) / 1000.0 }}"
+        device_class: "pressure"
+        unit_of_measurement: "bar"
+        state_class: "measurement"
+
+      # Water misc
+      - name: "SYR Water hardness"
+        unique_id: "syr_safetech_water_hardness"
+        value_template: "{{ value_json['getCND'] }}"
+        state_class: "measurement"
+
+      - name: "SYR Water temperature"
+        unique_id: "syr_safetech_water_temp"
+        value_template: "{{ float(value_json['getCEL']) / 10 }}"
+        unit_of_measurement: "°C"
+        device_class: "temperature"
+        state_class: "measurement"
